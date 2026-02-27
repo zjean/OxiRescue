@@ -1,0 +1,10 @@
+[package]
+name = "oxirescue"
+version = "0.1.0"
+edition = "2024"
+description = "Standalone disaster recovery tool for OxiCloud"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"

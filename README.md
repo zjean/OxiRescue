@@ -20,12 +20,78 @@ with zero dependency on OxiCloud source code.
 
 ## Installation
 
+### From source
+
 ```sh
 # Standard build (TUI + dump + export)
 cargo install --path .
 
 # With read-only FUSE mount support (requires macFUSE on macOS)
 cargo install --path . --features fuse
+```
+
+### Docker
+
+```sh
+docker pull ghcr.io/zjean/oxirescue:latest
+```
+
+Run any command by appending it after the image name:
+
+```sh
+docker run --rm \
+  -v /path/to/.blobs:/blobs:ro \
+  ghcr.io/zjean/oxirescue dump \
+    --blobs /blobs --output /out --classify
+```
+
+### Docker Compose
+
+Create a `docker-compose.yml`:
+
+```yaml
+services:
+  oxirescue:
+    image: ghcr.io/zjean/oxirescue:latest
+    volumes:
+      - /path/to/.blobs:/blobs:ro
+      - ./recovered:/out
+    command: ["dump", "--blobs", "/blobs", "--output", "/out", "--classify"]
+```
+
+```sh
+docker compose run --rm oxirescue
+```
+
+For live mode with a Postgres database:
+
+```yaml
+services:
+  oxirescue:
+    image: ghcr.io/zjean/oxirescue:latest
+    volumes:
+      - /path/to/.blobs:/blobs:ro
+      - ./recovered:/out
+    command:
+      - export-metadata
+      - --db
+      - postgres://user:pass@db/oxicloud
+      - --output
+      - /out/backup.db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: oxicloud
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
 ```
 
 ## Commands

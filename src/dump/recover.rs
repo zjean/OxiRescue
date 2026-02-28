@@ -1,9 +1,9 @@
-use std::fs;
-use std::path::Path;
-use anyhow::{Context, Result};
-use indicatif::{ProgressBar, ProgressStyle};
 use crate::blob::BlobStore;
 use crate::blob::classifier::classify_mime;
+use anyhow::{Context, Result};
+use indicatif::{ProgressBar, ProgressStyle};
+use std::fs;
+use std::path::Path;
 
 pub struct DumpStats {
     pub total_blobs: u64,
@@ -118,7 +118,7 @@ pub fn dump_blobs(
 
         if let Some(ref bar) = pb {
             bar.inc(1);
-            bar.set_message(format!("{}", entry.hash));
+            bar.set_message(entry.hash.to_string());
         }
     }
 

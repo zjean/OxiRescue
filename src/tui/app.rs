@@ -35,7 +35,7 @@ pub struct BrowserState {
 
 pub enum Screen {
     Dashboard,
-    Browser(BrowserState),
+    Browser(Box<BrowserState>),
 }
 
 pub struct App {
@@ -111,7 +111,7 @@ impl App {
         state.files = files;
         state.left_items = items;
 
-        self.screen = Screen::Browser(state);
+        self.screen = Screen::Browser(Box::new(state));
 
         // Load the right pane
         self.refresh_right_pane();

@@ -10,7 +10,7 @@ use std::time::Duration;
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
 
@@ -25,42 +25,40 @@ pub fn run_tui(mut app: App) -> anyhow::Result<()> {
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
     loop {
-        terminal.draw(|f| {
-            match &app.screen {
-                Screen::Dashboard => dashboard::render_dashboard(f, &app),
-                Screen::Browser(_) => browser::render_browser(f, &app),
-            }
+        terminal.draw(|f| match &app.screen {
+            Screen::Dashboard => dashboard::render_dashboard(f, &app),
+            Screen::Browser(_) => browser::render_browser(f, &app),
         })?;
 
-        if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                match &app.screen {
-                    Screen::Dashboard => match key.code {
-                        KeyCode::Char('q') => {
-                            app.should_quit = true;
-                        }
-                        KeyCode::Up | KeyCode::Char('k') => {
-                            if app.selected_user > 0 {
-                                app.selected_user -= 1;
-                            }
-                        }
-                        KeyCode::Down | KeyCode::Char('j') => {
-                            if app.selected_user + 1 < app.users.len() {
-                                app.selected_user += 1;
-                            }
-                        }
-                        KeyCode::Enter => {
-                            if let Some((user, _, _)) = app.users.get(app.selected_user) {
-                                let user_id = user.id.clone();
-                                let user_name = user.username.clone();
-                                let _ = app.enter_browser(user_id, user_name);
-                            }
-                        }
-                        _ => {}
-                    },
-                    Screen::Browser(_) => {
-                        handle_browser_key(&mut app, key.code)?;
+        if event::poll(Duration::from_millis(100))?
+            && let Event::Key(key) = event::read()?
+        {
+            match &app.screen {
+                Screen::Dashboard => match key.code {
+                    KeyCode::Char('q') => {
+                        app.should_quit = true;
                     }
+                    KeyCode::Up | KeyCode::Char('k') => {
+                        if app.selected_user > 0 {
+                            app.selected_user -= 1;
+                        }
+                    }
+                    KeyCode::Down | KeyCode::Char('j') => {
+                        if app.selected_user + 1 < app.users.len() {
+                            app.selected_user += 1;
+                        }
+                    }
+                    KeyCode::Enter => {
+                        if let Some((user, _, _)) = app.users.get(app.selected_user) {
+                            let user_id = user.id.clone();
+                            let user_name = user.username.clone();
+                            let _ = app.enter_browser(user_id, user_name);
+                        }
+                    }
+                    _ => {}
+                },
+                Screen::Browser(_) => {
+                    handle_browser_key(&mut app, key.code)?;
                 }
             }
         }
@@ -191,48 +189,48 @@ fn handle_browser_key(app: &mut App, code: KeyCode) -> anyhow::Result<()> {
                 let fid_opt = parent_folder_id.clone();
                 app.load_folder(fid_opt.as_deref())?;
                 // After loading, if we're at root, rebuild path
-                if parent_folder_id.is_none() {
-                    if let Screen::Browser(ref mut state) = app.screen {
-                        state.current_path = "/".to_string();
-                    }
+                if parent_folder_id.is_none()
+                    && let Screen::Browser(ref mut state) = app.screen
+                {
+                    state.current_path = "/".to_string();
                 }
             }
         }
 
         KeyCode::Char(' ') => {
-            if let Screen::Browser(ref mut state) = app.screen {
-                if matches!(state.active_pane, Pane::Left) {
-                    let idx = state.left_selected;
-                    if !state.left_items.is_empty() {
-                        if state.selected_items.contains(&idx) {
-                            state.selected_items.remove(&idx);
-                        } else {
-                            state.selected_items.insert(idx);
-                        }
+            if let Screen::Browser(ref mut state) = app.screen
+                && matches!(state.active_pane, Pane::Left)
+            {
+                let idx = state.left_selected;
+                if !state.left_items.is_empty() {
+                    if state.selected_items.contains(&idx) {
+                        state.selected_items.remove(&idx);
+                    } else {
+                        state.selected_items.insert(idx);
                     }
                 }
             }
         }
 
         KeyCode::Char('a') => {
-            if let Screen::Browser(ref mut state) = app.screen {
-                if matches!(state.active_pane, Pane::Left) {
-                    // Select all files (not ParentDir, not folders)
-                    let file_indices: Vec<usize> = state
-                        .left_items
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(i, item)| {
-                            if matches!(item, BrowserItem::File(_)) {
-                                Some(i)
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
-                    for idx in file_indices {
-                        state.selected_items.insert(idx);
-                    }
+            if let Screen::Browser(ref mut state) = app.screen
+                && matches!(state.active_pane, Pane::Left)
+            {
+                // Select all files (not ParentDir, not folders)
+                let file_indices: Vec<usize> = state
+                    .left_items
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, item)| {
+                        if matches!(item, BrowserItem::File(_)) {
+                            Some(i)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+                for idx in file_indices {
+                    state.selected_items.insert(idx);
                 }
             }
         }
@@ -267,10 +265,7 @@ fn handle_browser_key(app: &mut App, code: KeyCode) -> anyhow::Result<()> {
             if let Screen::Browser(ref mut state) = app.screen {
                 state.selected_items.clear();
                 state.status_message = if errors > 0 {
-                    Some(format!(
-                        "Copied {} files ({} errors)",
-                        copied, errors
-                    ))
+                    Some(format!("Copied {} files ({} errors)", copied, errors))
                 } else {
                     Some(format!("Copied {} files", copied))
                 };
@@ -302,10 +297,8 @@ fn handle_browser_key(app: &mut App, code: KeyCode) -> anyhow::Result<()> {
                         Err(e) => Some(format!("Export error: {}", e)),
                     };
                 }
-            } else {
-                if let Screen::Browser(ref mut state) = app.screen {
-                    state.status_message = Some("Select a folder first".to_string());
-                }
+            } else if let Screen::Browser(ref mut state) = app.screen {
+                state.status_message = Some("Select a folder first".to_string());
             }
         }
 

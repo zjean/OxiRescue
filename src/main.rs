@@ -37,8 +37,37 @@ fn main() -> anyhow::Result<()> {
             let pg = rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db))?;
             oxirescue::export::metadata::export_to_sqlite(&pg, &output)?;
         }
-        cli::Command::Mount { mountpoint, .. } => {
-            println!("mount: mountpoint={mountpoint:?}");
+        cli::Command::Mount {
+            db,
+            meta,
+            blobs,
+            mountpoint,
+        } => {
+            #[cfg(feature = "fuse")]
+            {
+                let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
+                let metadata: Box<dyn oxirescue::db::schema::MetadataSource> =
+                    if let Some(db_url) = db {
+                        let rt = tokio::runtime::Runtime::new()?;
+                        Box::new(
+                            rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db_url))?,
+                        )
+                    } else if let Some(meta_path) = meta {
+                        Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
+                    } else {
+                        anyhow::bail!("Either --db or --meta is required for mount mode");
+                    };
+                oxirescue::fuse::mount::mount_filesystem(metadata, blob_store, &mountpoint)?;
+            }
+            #[cfg(not(feature = "fuse"))]
+            {
+                let _ = (db, meta, blobs, mountpoint);
+                anyhow::bail!(
+                    "FUSE support was not compiled in. \
+                     On macOS, install macFUSE from https://osxfuse.github.io/ \
+                     and rebuild with: cargo build --features fuse"
+                );
+            }
         }
         cli::Command::Tui { db, meta, blobs } => {
             let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;

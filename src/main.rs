@@ -40,8 +40,18 @@ fn main() -> anyhow::Result<()> {
         cli::Command::Mount { mountpoint, .. } => {
             println!("mount: mountpoint={mountpoint:?}");
         }
-        cli::Command::Tui { blobs, .. } => {
-            println!("tui: blobs={blobs:?}");
+        cli::Command::Tui { db, meta, blobs } => {
+            let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
+            let metadata: Box<dyn oxirescue::db::schema::MetadataSource> = if let Some(db_url) = db {
+                let rt = tokio::runtime::Runtime::new()?;
+                Box::new(rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db_url))?)
+            } else if let Some(meta_path) = meta {
+                Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
+            } else {
+                anyhow::bail!("Either --db or --meta is required for TUI mode");
+            };
+            let app = oxirescue::tui::app::App::new(metadata, blob_store);
+            oxirescue::tui::run_tui(app)?;
         }
     }
     Ok(())

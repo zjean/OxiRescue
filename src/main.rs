@@ -14,7 +14,22 @@ fn main() -> anyhow::Result<()> {
             dry_run,
             min_size,
         } => {
-            let min_bytes = min_size.map(|s| parse_size(&s)).transpose()?;
+            if !blobs.exists() {
+                anyhow::bail!(
+                    "Blob directory not found: {}. Did you pass the correct --blobs path?",
+                    blobs.display()
+                );
+            }
+            let min_bytes = min_size
+                .map(|s| {
+                    parse_size(&s).with_context(|| {
+                        format!(
+                            "Invalid --min-size value '{s}'. \
+                             Expected a number optionally followed by KB, MB, or GB (e.g. \"1MB\")"
+                        )
+                    })
+                })
+                .transpose()?;
             let stats = oxirescue::dump::recover::dump_blobs(
                 &blobs, &output, classify, copy, verify, dry_run, min_bytes,
             )?;
@@ -34,7 +49,14 @@ fn main() -> anyhow::Result<()> {
         }
         cli::Command::ExportMetadata { db, output } => {
             let rt = tokio::runtime::Runtime::new()?;
-            let pg = rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db))?;
+            let pg = rt
+                .block_on(oxirescue::db::postgres::PgMetadata::connect(&db))
+                .with_context(|| {
+                    format!(
+                        "Failed to connect to PostgreSQL. \
+                         Please check your connection string: {db}"
+                    )
+                })?;
             oxirescue::export::metadata::export_to_sqlite(&pg, &output)?;
         }
         cli::Command::Mount {
@@ -45,6 +67,11 @@ fn main() -> anyhow::Result<()> {
         } => {
             #[cfg(feature = "fuse")]
             {
+                if db.is_none() && meta.is_none() {
+                    anyhow::bail!(
+                        "Either --db (PostgreSQL) or --meta (SQLite file) is required"
+                    );
+                }
                 let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
                 let metadata: Box<dyn oxirescue::db::schema::MetadataSource> =
                     if let Some(db_url) = db {
@@ -55,7 +82,7 @@ fn main() -> anyhow::Result<()> {
                     } else if let Some(meta_path) = meta {
                         Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
                     } else {
-                        anyhow::bail!("Either --db or --meta is required for mount mode");
+                        unreachable!("already validated above")
                     };
                 oxirescue::fuse::mount::mount_filesystem(metadata, blob_store, &mountpoint)?;
             }
@@ -70,6 +97,11 @@ fn main() -> anyhow::Result<()> {
             }
         }
         cli::Command::Tui { db, meta, blobs } => {
+            if db.is_none() && meta.is_none() {
+                anyhow::bail!(
+                    "Either --db (PostgreSQL) or --meta (SQLite file) is required"
+                );
+            }
             let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
             let metadata: Box<dyn oxirescue::db::schema::MetadataSource> = if let Some(db_url) = db {
                 let rt = tokio::runtime::Runtime::new()?;
@@ -77,7 +109,7 @@ fn main() -> anyhow::Result<()> {
             } else if let Some(meta_path) = meta {
                 Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
             } else {
-                anyhow::bail!("Either --db or --meta is required for TUI mode");
+                unreachable!("already validated above")
             };
             let app = oxirescue::tui::app::App::new(metadata, blob_store);
             oxirescue::tui::run_tui(app)?;
@@ -98,3 +130,5 @@ fn parse_size(s: &str) -> anyhow::Result<u64> {
         Ok(s.parse::<u64>()?)
     }
 }
+
+use anyhow::Context;

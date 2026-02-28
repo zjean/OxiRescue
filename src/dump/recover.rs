@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 use anyhow::{Context, Result};
+use indicatif::{ProgressBar, ProgressStyle};
 use crate::blob::BlobStore;
 use crate::blob::classifier::classify_mime;
 
@@ -34,6 +35,36 @@ pub fn dump_blobs(
 
     let entries: Vec<_> = store.iter_blobs().collect();
 
+    // First pass: count total blobs that will be processed (for the progress bar total).
+    let total_for_pb = entries
+        .iter()
+        .filter(|e| {
+            if e.size < min_size {
+                return false;
+            }
+            if verify && !store.verify_blob(&e.hash).unwrap_or(false) {
+                return false;
+            }
+            true
+        })
+        .count() as u64;
+
+    // Set up progress bar only for non-dry-run runs.
+    let pb: Option<ProgressBar> = if dry_run {
+        None
+    } else {
+        let bar = ProgressBar::new(total_for_pb);
+        bar.set_style(
+            ProgressStyle::with_template(
+                "{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len} ({bytes_per_sec}) {msg}",
+            )
+            .unwrap()
+            .progress_chars("#>-"),
+        );
+        Some(bar)
+    };
+
+    // Second pass: process blobs.
     for entry in &entries {
         if entry.size < min_size {
             stats.skipped += 1;
@@ -84,6 +115,19 @@ pub fn dump_blobs(
                 }
             }
         }
+
+        if let Some(ref bar) = pb {
+            bar.inc(1);
+            bar.set_message(format!("{}", entry.hash));
+        }
     }
+
+    if let Some(ref bar) = pb {
+        bar.finish_with_message(format!(
+            "Done — {} blobs, {} bytes",
+            stats.total_blobs, stats.total_bytes
+        ));
+    }
+
     Ok(stats)
 }

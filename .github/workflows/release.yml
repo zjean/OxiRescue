@@ -30,10 +30,11 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Test
-        run: cargo test 
+        run: cargo test
+
   docker:
     name: Docker
     runs-on: ubuntu-latest

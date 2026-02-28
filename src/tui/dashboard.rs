@@ -51,10 +51,9 @@ pub fn render_dashboard(f: &mut Frame, app: &App) {
 
     let stats_lines: Vec<Line> = if let Some(stats) = &app.stats {
         let dedup_pct = if stats.logical_bytes > 0 {
-            let savings =
-                stats.logical_bytes.saturating_sub(stats.physical_bytes) as f64
-                    / stats.logical_bytes as f64
-                    * 100.0;
+            let savings = stats.logical_bytes.saturating_sub(stats.physical_bytes) as f64
+                / stats.logical_bytes as f64
+                * 100.0;
             format!("{:.1}%", savings)
         } else {
             "0.0%".to_string()
@@ -63,16 +62,10 @@ pub fn render_dashboard(f: &mut Frame, app: &App) {
         vec![
             Line::from(format!(
                 "  Users: {}    Files: {}    Folders: {}    Blobs: {}",
-                stats.user_count,
-                stats.file_count,
-                stats.folder_count,
-                stats.unique_blobs
+                stats.user_count, stats.file_count, stats.folder_count, stats.unique_blobs
             )),
             Line::from(""),
-            Line::from(format!(
-                "  Logical:  {}",
-                format_bytes(stats.logical_bytes)
-            )),
+            Line::from(format!("  Logical:  {}", format_bytes(stats.logical_bytes))),
             Line::from(format!(
                 "  Physical: {}",
                 format_bytes(stats.physical_bytes)
@@ -87,9 +80,7 @@ pub fn render_dashboard(f: &mut Frame, app: &App) {
     f.render_widget(stats_widget, chunks[1]);
 
     // 3. User list
-    let users_block = Block::default()
-        .borders(Borders::ALL)
-        .title(" Users ");
+    let users_block = Block::default().borders(Borders::ALL).title(" Users ");
 
     let user_items: Vec<ListItem> = app
         .users
@@ -103,9 +94,7 @@ pub fn render_dashboard(f: &mut Frame, app: &App) {
                 format_bytes(*total_bytes)
             );
             let style = if i == app.selected_user {
-                Style::default()
-                    .bg(Color::Cyan)
-                    .fg(Color::Black)
+                Style::default().bg(Color::Cyan).fg(Color::Black)
             } else {
                 Style::default()
             };

@@ -1,4 +1,4 @@
-use oxirescue::blob::{BlobStore, BlobEntry, verify_hash};
+use oxirescue::blob::{BlobEntry, BlobStore, verify_hash};
 use std::fs;
 use tempfile::TempDir;
 
@@ -52,7 +52,10 @@ fn test_blob_path_for_hash() {
 
     // Expected: {root}/ab/abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890.blob
     let expected = root.path().join("ab").join(format!("{hash}.blob"));
-    assert_eq!(path, expected, "blob_path should resolve to {{root}}/{{prefix}}/{{hash}}.blob");
+    assert_eq!(
+        path, expected,
+        "blob_path should resolve to {{root}}/{{prefix}}/{{hash}}.blob"
+    );
 }
 
 #[test]
@@ -69,11 +72,18 @@ fn test_read_blob() {
 
     // read_blob_head with fewer bytes than content
     let head = store.read_blob_head(hash, 10).unwrap();
-    assert_eq!(&head, &content[..10], "read_blob_head(10) should return first 10 bytes");
+    assert_eq!(
+        &head,
+        &content[..10],
+        "read_blob_head(10) should return first 10 bytes"
+    );
 
     // read_blob_head requesting more than available should return all bytes
     let head_all = store.read_blob_head(hash, 1000).unwrap();
-    assert_eq!(head_all, content, "read_blob_head with n > size should return full content");
+    assert_eq!(
+        head_all, content,
+        "read_blob_head with n > size should return full content"
+    );
 }
 
 #[test]
@@ -86,15 +96,25 @@ fn test_verify_blob_integrity() {
     let store = BlobStore::new(root.path()).unwrap();
 
     let valid = store.verify_blob(HELLO_HASH).unwrap();
-    assert!(valid, "blob whose filename matches its SHA-256 should verify as valid");
+    assert!(
+        valid,
+        "blob whose filename matches its SHA-256 should verify as valid"
+    );
 
     // Now write a blob with wrong content under a known hash => should be invalid
     let bad_hash = "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778800";
-    write_fake_blob(&root, bad_hash, b"this content does not match the hash above");
+    write_fake_blob(
+        &root,
+        bad_hash,
+        b"this content does not match the hash above",
+    );
     let invalid = store.verify_blob(bad_hash).unwrap();
     assert!(!invalid, "blob with wrong content should fail verification");
 
     // verify_hash standalone helper
     let blob_path = store.blob_path(HELLO_HASH);
-    assert!(verify_hash(&blob_path, HELLO_HASH).unwrap(), "verify_hash standalone should return true for matching content");
+    assert!(
+        verify_hash(&blob_path, HELLO_HASH).unwrap(),
+        "verify_hash standalone should return true for matching content"
+    );
 }

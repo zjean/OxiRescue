@@ -1,4 +1,4 @@
-use oxirescue::blob::classifier::{classify_mime, MimeCategory};
+use oxirescue::blob::classifier::{MimeCategory, classify_mime};
 
 #[test]
 fn test_classify_jpeg() {

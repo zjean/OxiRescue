@@ -33,10 +33,7 @@ pub fn render_browser(f: &mut Frame, app: &App) {
         .split(vertical[0]);
 
     // --- Left pane title ---
-    let left_title = format!(
-        " {}: {} ",
-        state.user_name, state.current_path
-    );
+    let left_title = format!(" {}: {} ", state.user_name, state.current_path);
     let left_border_style = if matches!(state.active_pane, Pane::Left) {
         Style::default().fg(Color::Cyan)
     } else {
@@ -75,7 +72,9 @@ pub fn render_browser(f: &mut Frame, app: &App) {
                     } else if is_marked {
                         Style::default().fg(Color::Yellow)
                     } else {
-                        Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+                        Style::default()
+                            .fg(Color::Blue)
+                            .add_modifier(Modifier::BOLD)
                     };
                     let text = format!("{:<40}{}", label, right);
                     Line::from(Span::styled(text, base_style))
@@ -124,12 +123,13 @@ pub fn render_browser(f: &mut Frame, app: &App) {
             .iter()
             .enumerate()
             .map(|(i, name)| {
-                let style = if i == state.right_selected
-                    && matches!(state.active_pane, Pane::Right)
+                let style = if i == state.right_selected && matches!(state.active_pane, Pane::Right)
                 {
                     Style::default().bg(Color::Cyan).fg(Color::Black)
                 } else if name.ends_with('/') {
-                    Style::default().fg(Color::Blue).add_modifier(Modifier::BOLD)
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::BOLD)
                 } else {
                     Style::default()
                 };

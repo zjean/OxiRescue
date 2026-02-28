@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};

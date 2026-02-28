@@ -64,7 +64,11 @@ fn test_dump_flat() {
         .unwrap()
         .filter_map(|e| e.ok())
         .collect();
-    assert_eq!(entries.len(), 3, "output root should contain exactly 3 files");
+    assert_eq!(
+        entries.len(),
+        3,
+        "output root should contain exactly 3 files"
+    );
 
     // Verify no subdirectories were created
     for entry in &entries {
@@ -165,10 +169,10 @@ fn test_dump_min_size_filter() {
     let stats = dump_blobs(
         blobs.path(),
         output.path(),
-        false, // classify
-        true,  // force_copy
-        false, // verify
-        false, // dry_run
+        false,    // classify
+        true,     // force_copy
+        false,    // verify
+        false,    // dry_run
         Some(10), // min_size: 10 bytes
     )
     .unwrap();
@@ -187,5 +191,9 @@ fn test_dump_min_size_filter() {
         .unwrap()
         .filter_map(|e| e.ok())
         .collect();
-    assert_eq!(entries.len(), 2, "output root should contain exactly 2 files");
+    assert_eq!(
+        entries.len(),
+        2,
+        "output root should contain exactly 2 files"
+    );
 }

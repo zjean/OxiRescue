@@ -1,9 +1,7 @@
 use anyhow::Result;
 use sqlx::PgPool;
 
-use super::schema::{
-    BlobRecord, FileEntry, Folder, MetadataSource, StorageStats, User,
-};
+use super::schema::{BlobRecord, FileEntry, Folder, MetadataSource, StorageStats, User};
 
 pub struct PgMetadata {
     pool: PgPool,
@@ -21,26 +19,23 @@ impl MetadataSource for PgMetadata {
         let pool = self.pool.clone();
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async move {
-                let user_count: i64 =
-                    sqlx::query_scalar("SELECT COUNT(*) FROM auth.users")
-                        .fetch_one(&pool)
-                        .await?;
+                let user_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM auth.users")
+                    .fetch_one(&pool)
+                    .await?;
 
                 let file_count: i64 =
                     sqlx::query_scalar("SELECT COUNT(*) FROM storage.files WHERE NOT is_trashed")
                         .fetch_one(&pool)
                         .await?;
 
-                let folder_count: i64 = sqlx::query_scalar(
-                    "SELECT COUNT(*) FROM storage.folders WHERE NOT is_trashed",
-                )
-                .fetch_one(&pool)
-                .await?;
-
-                let unique_blobs: i64 =
-                    sqlx::query_scalar("SELECT COUNT(*) FROM storage.blobs")
+                let folder_count: i64 =
+                    sqlx::query_scalar("SELECT COUNT(*) FROM storage.folders WHERE NOT is_trashed")
                         .fetch_one(&pool)
                         .await?;
+
+                let unique_blobs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM storage.blobs")
+                    .fetch_one(&pool)
+                    .await?;
 
                 let logical_bytes: i64 = sqlx::query_scalar(
                     "SELECT COALESCE(SUM(size), 0) FROM storage.files WHERE NOT is_trashed",
@@ -183,7 +178,17 @@ impl MetadataSource for PgMetadata {
                 Ok(rows
                     .into_iter()
                     .map(
-                        |(id, name, folder_id, user_id, blob_hash, size, mime_type, created_at, updated_at)| {
+                        |(
+                            id,
+                            name,
+                            folder_id,
+                            user_id,
+                            blob_hash,
+                            size,
+                            mime_type,
+                            created_at,
+                            updated_at,
+                        )| {
                             FileEntry {
                                 id,
                                 name,
@@ -295,7 +300,17 @@ impl MetadataSource for PgMetadata {
                 Ok(rows
                     .into_iter()
                     .map(
-                        |(id, name, folder_id, user_id, blob_hash, size, mime_type, created_at, updated_at)| {
+                        |(
+                            id,
+                            name,
+                            folder_id,
+                            user_id,
+                            blob_hash,
+                            size,
+                            mime_type,
+                            created_at,
+                            updated_at,
+                        )| {
                             FileEntry {
                                 id,
                                 name,
@@ -394,7 +409,17 @@ impl MetadataSource for PgMetadata {
                 Ok(rows
                     .into_iter()
                     .map(
-                        |(id, name, folder_id, user_id, blob_hash, size, mime_type, created_at, updated_at)| {
+                        |(
+                            id,
+                            name,
+                            folder_id,
+                            user_id,
+                            blob_hash,
+                            size,
+                            mime_type,
+                            created_at,
+                            updated_at,
+                        )| {
                             FileEntry {
                                 id,
                                 name,

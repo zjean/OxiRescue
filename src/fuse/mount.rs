@@ -193,25 +193,26 @@ impl OxiFs {
         let epoch = UNIX_EPOCH;
 
         match &entry.kind {
-            InodeKind::Root | InodeKind::MetaDir | InodeKind::UserDir { .. } | InodeKind::VirtualFolder { .. } => {
-                FileAttr {
-                    ino,
-                    size: 0,
-                    blocks: 0,
-                    atime: epoch,
-                    mtime: epoch,
-                    ctime: epoch,
-                    crtime: epoch,
-                    kind: FileType::Directory,
-                    perm: 0o555,
-                    nlink: 2,
-                    uid,
-                    gid,
-                    rdev: 0,
-                    flags: 0,
-                    blksize: 512,
-                }
-            }
+            InodeKind::Root
+            | InodeKind::MetaDir
+            | InodeKind::UserDir { .. }
+            | InodeKind::VirtualFolder { .. } => FileAttr {
+                ino,
+                size: 0,
+                blocks: 0,
+                atime: epoch,
+                mtime: epoch,
+                ctime: epoch,
+                crtime: epoch,
+                kind: FileType::Directory,
+                perm: 0o555,
+                nlink: 2,
+                uid,
+                gid,
+                rdev: 0,
+                flags: 0,
+                blksize: 512,
+            },
             InodeKind::VirtualFile { file } => {
                 let size = file.size;
                 let blocks = (size + 511) / 512;
@@ -291,7 +292,11 @@ fn parse_timestamp(s: Option<&str>) -> Option<SystemTime> {
         return None;
     }
     let (year, month, day) = (date_parts[0] as i64, date_parts[1], date_parts[2]);
-    let (hour, min, sec) = (time_parts[0] as i64, time_parts[1] as i64, time_parts[2] as i64);
+    let (hour, min, sec) = (
+        time_parts[0] as i64,
+        time_parts[1] as i64,
+        time_parts[2] as i64,
+    );
 
     // Compute seconds since Unix epoch (1970-01-01T00:00:00Z)
     // Days since epoch using Gregorian calendar formula
@@ -299,9 +304,7 @@ fn parse_timestamp(s: Option<&str>) -> Option<SystemTime> {
     let days = 365 * year_adj + year_adj / 4 - year_adj / 100 + year_adj / 400;
     let month_days: [i64; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     let is_leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-    let month_offset: i64 = month_days[..(month as usize - 1)]
-        .iter()
-        .sum::<i64>()
+    let month_offset: i64 = month_days[..(month as usize - 1)].iter().sum::<i64>()
         + if is_leap && month > 2 { 1 } else { 0 };
     let total_days = days + month_offset + (day as i64 - 1) - 719162; // 719162 = days from year 0 to 1970-01-01
     let total_secs = total_days * 86400 + hour * 3600 + min * 60 + sec;
@@ -531,23 +534,11 @@ impl Filesystem for OxiFs {
         reply.error(EROFS);
     }
 
-    fn unlink(
-        &mut self,
-        _req: &Request,
-        _parent: u64,
-        _name: &OsStr,
-        reply: fuser::ReplyEmpty,
-    ) {
+    fn unlink(&mut self, _req: &Request, _parent: u64, _name: &OsStr, reply: fuser::ReplyEmpty) {
         reply.error(EROFS);
     }
 
-    fn rmdir(
-        &mut self,
-        _req: &Request,
-        _parent: u64,
-        _name: &OsStr,
-        reply: fuser::ReplyEmpty,
-    ) {
+    fn rmdir(&mut self, _req: &Request, _parent: u64, _name: &OsStr, reply: fuser::ReplyEmpty) {
         reply.error(EROFS);
     }
 

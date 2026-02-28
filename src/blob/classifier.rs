@@ -52,24 +52,25 @@ pub fn classify_mime(head: &[u8]) -> (MimeCategory, &'static str) {
 }
 
 fn is_document_mime(mime: &str) -> bool {
-    matches!(mime,
+    matches!(
+        mime,
         "application/pdf"
-        | "application/msword"
-        | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        | "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        | "application/vnd.ms-excel"
-        | "application/vnd.ms-powerpoint"
-        | "application/vnd.oasis.opendocument.text"
-        | "application/vnd.oasis.opendocument.spreadsheet"
-        | "application/vnd.oasis.opendocument.presentation"
-        | "application/rtf"
-        | "application/epub+zip"
-        | "text/plain"
-        | "text/csv"
-        | "text/html"
-        | "text/xml"
-        | "application/xml"
-        | "application/json"
+            | "application/msword"
+            | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            | "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            | "application/vnd.ms-excel"
+            | "application/vnd.ms-powerpoint"
+            | "application/vnd.oasis.opendocument.text"
+            | "application/vnd.oasis.opendocument.spreadsheet"
+            | "application/vnd.oasis.opendocument.presentation"
+            | "application/rtf"
+            | "application/epub+zip"
+            | "text/plain"
+            | "text/csv"
+            | "text/html"
+            | "text/xml"
+            | "application/xml"
+            | "application/json"
     )
 }

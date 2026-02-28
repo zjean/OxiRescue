@@ -68,22 +68,19 @@ fn main() -> anyhow::Result<()> {
             #[cfg(feature = "fuse")]
             {
                 if db.is_none() && meta.is_none() {
-                    anyhow::bail!(
-                        "Either --db (PostgreSQL) or --meta (SQLite file) is required"
-                    );
+                    anyhow::bail!("Either --db (PostgreSQL) or --meta (SQLite file) is required");
                 }
                 let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
-                let metadata: Box<dyn oxirescue::db::schema::MetadataSource> =
-                    if let Some(db_url) = db {
-                        let rt = tokio::runtime::Runtime::new()?;
-                        Box::new(
-                            rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db_url))?,
-                        )
-                    } else if let Some(meta_path) = meta {
-                        Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
-                    } else {
-                        unreachable!("already validated above")
-                    };
+                let metadata: Box<dyn oxirescue::db::schema::MetadataSource> = if let Some(db_url) =
+                    db
+                {
+                    let rt = tokio::runtime::Runtime::new()?;
+                    Box::new(rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db_url))?)
+                } else if let Some(meta_path) = meta {
+                    Box::new(oxirescue::db::sqlite::SqliteMetadata::open(&meta_path)?)
+                } else {
+                    unreachable!("already validated above")
+                };
                 oxirescue::fuse::mount::mount_filesystem(metadata, blob_store, &mountpoint)?;
             }
             #[cfg(not(feature = "fuse"))]
@@ -98,12 +95,11 @@ fn main() -> anyhow::Result<()> {
         }
         cli::Command::Tui { db, meta, blobs } => {
             if db.is_none() && meta.is_none() {
-                anyhow::bail!(
-                    "Either --db (PostgreSQL) or --meta (SQLite file) is required"
-                );
+                anyhow::bail!("Either --db (PostgreSQL) or --meta (SQLite file) is required");
             }
             let blob_store = oxirescue::blob::BlobStore::new(&blobs)?;
-            let metadata: Box<dyn oxirescue::db::schema::MetadataSource> = if let Some(db_url) = db {
+            let metadata: Box<dyn oxirescue::db::schema::MetadataSource> = if let Some(db_url) = db
+            {
                 let rt = tokio::runtime::Runtime::new()?;
                 Box::new(rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db_url))?)
             } else if let Some(meta_path) = meta {

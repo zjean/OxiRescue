@@ -78,14 +78,10 @@ impl SqliteMetadata {
 impl MetadataSource for SqliteMetadata {
     fn stats(&self) -> Result<StorageStats> {
         let conn = self.conn.lock().unwrap();
-        let user_count: i64 =
-            conn.query_row("SELECT COUNT(*) FROM users", [], |r| r.get(0))?;
-        let file_count: i64 =
-            conn.query_row("SELECT COUNT(*) FROM files", [], |r| r.get(0))?;
-        let folder_count: i64 =
-            conn.query_row("SELECT COUNT(*) FROM folders", [], |r| r.get(0))?;
-        let unique_blobs: i64 =
-            conn.query_row("SELECT COUNT(*) FROM blobs", [], |r| r.get(0))?;
+        let user_count: i64 = conn.query_row("SELECT COUNT(*) FROM users", [], |r| r.get(0))?;
+        let file_count: i64 = conn.query_row("SELECT COUNT(*) FROM files", [], |r| r.get(0))?;
+        let folder_count: i64 = conn.query_row("SELECT COUNT(*) FROM folders", [], |r| r.get(0))?;
+        let unique_blobs: i64 = conn.query_row("SELECT COUNT(*) FROM blobs", [], |r| r.get(0))?;
         let logical_bytes: i64 =
             conn.query_row("SELECT COALESCE(SUM(size), 0) FROM files", [], |r| r.get(0))?;
         let physical_bytes: i64 =
@@ -103,9 +99,8 @@ impl MetadataSource for SqliteMetadata {
 
     fn list_users(&self) -> Result<Vec<User>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare(
-            "SELECT id, username, display_name, role FROM users ORDER BY username",
-        )?;
+        let mut stmt =
+            conn.prepare("SELECT id, username, display_name, role FROM users ORDER BY username")?;
         let rows = stmt.query_map([], |r| {
             Ok(User {
                 id: r.get(0)?,
@@ -246,9 +241,8 @@ impl MetadataSource for SqliteMetadata {
 
     fn get_blob_record(&self, hash: &str) -> Result<Option<BlobRecord>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare(
-            "SELECT hash, size, ref_count, content_type FROM blobs WHERE hash = ?1",
-        )?;
+        let mut stmt =
+            conn.prepare("SELECT hash, size, ref_count, content_type FROM blobs WHERE hash = ?1")?;
         let mut rows = stmt.query_map(params![hash], |r| {
             Ok(BlobRecord {
                 hash: r.get(0)?,
@@ -265,8 +259,8 @@ impl MetadataSource for SqliteMetadata {
 
     fn get_all_blobs(&self) -> Result<Vec<BlobRecord>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn
-            .prepare("SELECT hash, size, ref_count, content_type FROM blobs ORDER BY hash")?;
+        let mut stmt =
+            conn.prepare("SELECT hash, size, ref_count, content_type FROM blobs ORDER BY hash")?;
         let rows = stmt.query_map([], |r| {
             Ok(BlobRecord {
                 hash: r.get(0)?,

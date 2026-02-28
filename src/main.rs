@@ -33,7 +33,9 @@ fn main() -> anyhow::Result<()> {
             }
         }
         cli::Command::ExportMetadata { db, output } => {
-            println!("export-metadata: db={db} output={output:?}");
+            let rt = tokio::runtime::Runtime::new()?;
+            let pg = rt.block_on(oxirescue::db::postgres::PgMetadata::connect(&db))?;
+            oxirescue::export::metadata::export_to_sqlite(&pg, &output)?;
         }
         cli::Command::Mount { mountpoint, .. } => {
             println!("mount: mountpoint={mountpoint:?}");

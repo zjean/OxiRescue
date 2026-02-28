@@ -1,13 +1,17 @@
-FROM rust:1.85-bookworm AS builder
+FROM rust:1.93-bookworm AS builder
 
 WORKDIR /build
 
 # Cache dependency builds: copy manifests first, build a dummy, then overlay real source
 COPY Cargo.toml Cargo.lock ./
-RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release && rm -rf src
+RUN mkdir src \
+    && echo "fn main() {}" > src/main.rs \
+    && touch src/lib.rs \
+    && cargo build --release \
+    && rm -rf src
 
 COPY src/ src/
-RUN touch src/main.rs && cargo build --release
+RUN touch src/main.rs src/lib.rs && cargo build --release
 
 # -------------------------------------------------------------------
 FROM debian:bookworm-slim
